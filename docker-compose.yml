@@ -5,11 +5,17 @@ services:
     hostname: rinha-api-01
     container_name: rinha-api-01
     restart: on-failure
+    network_mode: host
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "3001:3000"
+    environment:
+      - API_PORT=${API_PORT_1}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_PORT=${DB_PORT}
+      - DB_HOST=${DB_HOST}
     depends_on:
       - rinha-db
     deploy:
@@ -22,33 +28,38 @@ services:
     <<: *api
     hostname: rinha-api-02
     container_name: rinha-api-02
-    ports:
-      - "3002:3000"
+    environment:
+      - API_PORT=${API_PORT_2}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_PORT=${DB_PORT}
+      - DB_HOST=${DB_HOST}
     depends_on:
       - rinha-db
 
   rinha-db:
     image: postgres:16.1
     container_name: rinha-db
-    ports:
-      - '5432:5432'
+    network_mode: host
     environment:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
       - POSTGRES_DB=${DB_DATABASE}
+      - PGPORT=${DB_PORT}
     volumes:
       - ./infra/init.sql:/docker-entrypoint-initdb.d/init.sql
     command: postgres -c checkpoint_timeout=600 -c max_wal_size=4096 -c synchronous_commit=0
     deploy:
       resources:
         limits:
-          cpus: "0.5"
-          memory: "70MB"
+          cpus: "0.6"
+          memory: "50MB"
 
   nginx:
     image: nginx:latest
     container_name: nginx-rinha-2024
-
+    network_mode: host
     volumes:
       - ./infra/nginx.conf:/etc/nginx/nginx.conf
 
@@ -56,16 +67,8 @@ services:
       - rinha-api-01
       - rinha-api-02
 
-    ports:
-      - "9999:9999"
-
     deploy:
       resources:
         limits:
-          cpus: "0.1"
-          memory: "15MB"
-
-networks:
-  default:
-    driver: bridge
-    name: rinha-nginx-2024q1
+          cpus: "0.2"
+          memory: "50MB"

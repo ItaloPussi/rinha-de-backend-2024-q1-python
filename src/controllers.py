@@ -24,6 +24,7 @@ def make_transaction_controller(client_id: str, transaction: Dict[str, str | int
         cur.execute("INSERT INTO transactions (client_id, amount, operation, summary) values (%s, %s, %s, %s)", (client_id, transaction["value"], transaction["type"], transaction["description"]))
         database_connection.commit()
     else:
+        database_connection.commit()
         return make_transaction_controller(client_id, transaction)
 
     return credit_line, forecast_balance
